@@ -100,5 +100,4 @@ public class HexWorld {
 
         ter.renderFrame(randomTiles);
     }
-
 }
