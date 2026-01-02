@@ -34,6 +34,7 @@ public class RandomWorldDemo {
      *  a wall, 33% chance of being a flower, and 33%
      *  chance of being empty space.
      */
+
     private static TETile randomTile() {
         int tileNum = RANDOM.nextInt(3);
         switch (tileNum) {
@@ -53,6 +54,5 @@ public class RandomWorldDemo {
 
         ter.renderFrame(randomTiles);
     }
-
 
 }
