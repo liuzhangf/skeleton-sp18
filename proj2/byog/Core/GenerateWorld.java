@@ -142,7 +142,7 @@ public class GenerateWorld {
             int generatey = randomInt((int) Math.round(HEIGHT * 0.04), (int) Math.round((HEIGHT - generationheight) * 0.96));
 
             if (judge(tiles, generatex, generatey, generatewidth, generationheight)){
-                System.out.println(cnt);
+                //System.out.println(cnt);
                 cnt += generatewidth * generationheight;
                 draw(tiles, generatex, generatey, generatewidth, generationheight);
                 roomList.add(new Room(generatewidth, generationheight, generatex, generatey));
