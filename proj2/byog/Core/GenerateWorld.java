@@ -193,10 +193,14 @@ public class GenerateWorld {
             }
         }
     }
-/*
+
     public static void main(String[] args) {
-        new GenerateWorld(10);
+        Game game = new Game();
+        TETile[][] world = game.playWithInputString("N8272166368955537510S");
+        TERenderer ter = new TERenderer();
+        ter.initialize(WIDTH, HEIGHT);
+        ter.renderFrame(world);
     }
-*/
+
 
 }

@@ -45,8 +45,8 @@ public class Game {
         if (input == null || input.isEmpty()) {
             return 0;
         }
-        int nIndex = input.indexOf('N');
-        int sIndex = input.indexOf('S');
+        int nIndex = input.indexOf('n');
+        int sIndex = input.indexOf('s');
 
         if (nIndex == -1 || sIndex == -1 || sIndex <= nIndex + 1) {
             return 0;
