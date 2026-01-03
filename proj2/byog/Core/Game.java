@@ -45,22 +45,19 @@ public class Game {
         if (input == null || input.isEmpty()) {
             return 0;
         }
-
-        // 找到N和S的位置
         int nIndex = input.indexOf('N');
         int sIndex = input.indexOf('S');
 
-        // 校验格式：N在S前，且中间有数字
         if (nIndex == -1 || sIndex == -1 || sIndex <= nIndex + 1) {
-            return 0; // 非法格式返回默认种子
+            return 0;
         }
 
-        // 提取N和S之间的数字字符串
         String seedStr = input.substring(nIndex + 1, sIndex);
         try {
-            return Long.parseLong(seedStr); // 转成long型种子（支持大数）
+            return Long.parseLong(seedStr);
         } catch (NumberFormatException e) {
-            return 0; // 非数字返回默认种子
+            return 0;
         }
     }
+
 }
