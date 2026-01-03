@@ -27,12 +27,40 @@ public class Game {
      * @param input the input string to feed to your program
      * @return the 2D TETile[][] representing the state of the world
      */
-    public TETile[][] playWithInputString(String input) {
-        // TODO: Fill out this method to run the game using the input passed in,
-        // and return a 2D tile representation of the world that would have been
-        // drawn if the same inputs had been given to playWithKeyboard().
 
-        TETile[][] finalWorldFrame = null;
-        return finalWorldFrame;
+    public TETile[][] playWithInputString(String s) {
+        // 1. 解析输入字符串，提取种子
+        long seed = parseSeedFromInput(s);
+        // 2. 生成世界瓦片数组
+        GenerateWorld worldGenerator = new GenerateWorld(seed);
+        return worldGenerator.generateTiles();
+    }
+
+    /**
+     * 解析输入字符串的种子：
+     * - 格式要求：以N开头，S结尾，中间为数字（支持正负，如"N-123S"）；
+     * - 异常处理：非法格式默认返回0（可根据需求调整）。
+     */
+    private long parseSeedFromInput(String input) {
+        if (input == null || input.isEmpty()) {
+            return 0;
+        }
+
+        // 找到N和S的位置
+        int nIndex = input.indexOf('N');
+        int sIndex = input.indexOf('S');
+
+        // 校验格式：N在S前，且中间有数字
+        if (nIndex == -1 || sIndex == -1 || sIndex <= nIndex + 1) {
+            return 0; // 非法格式返回默认种子
+        }
+
+        // 提取N和S之间的数字字符串
+        String seedStr = input.substring(nIndex + 1, sIndex);
+        try {
+            return Long.parseLong(seedStr); // 转成long型种子（支持大数）
+        } catch (NumberFormatException e) {
+            return 0; // 非数字返回默认种子
+        }
     }
 }

@@ -1,5 +1,4 @@
 package byog.Core;
-
 import byog.TileEngine.TERenderer;
 import byog.TileEngine.TETile;
 import byog.TileEngine.Tileset;
@@ -14,8 +13,8 @@ import java.util.Collections;
 
 public class GenerateWorld {
 
-    private static final int WIDTH = 80;
-    private static final int HEIGHT = 80;
+    private static final int WIDTH = 65;
+    private static final int HEIGHT = 65;
     private final Random RANDOM;
     private boolean vis[][];
     private int Max_num;
@@ -24,20 +23,25 @@ public class GenerateWorld {
     public GenerateWorld(long  x) {
         RANDOM = new Random(x);
         roomList = new ArrayList<>();
+        Max_num = (int) Math.round(0.4 * WIDTH * HEIGHT);
         TERenderer ter = new TERenderer();
         ter.initialize(WIDTH, HEIGHT);
         TETile[][] world = new TETile[WIDTH][HEIGHT];
-        for (int i = 0; i < WIDTH; i += 1) {
-            for (int j = 0; j < HEIGHT; j += 1) {
+    }
+
+    public TETile[][] generateTiles() {
+
+        TETile[][] world = new TETile[WIDTH][HEIGHT];
+        for (int i = 0; i < WIDTH; i++) {
+            for (int j = 0; j < HEIGHT; j++) {
                 world[i][j] = Tileset.NOTHING;
             }
         }
-        Max_num = (int) Math.round(0.4 * WIDTH * HEIGHT);
         GenerateFull(world);
         Collections.sort(roomList);
         GeneratePath(world, roomList);
         drawWall(world);
-        ter.renderFrame(world);
+        return world;
     }
 
     private void GeneratePath(TETile[][] tiles, ArrayList<Room> roomList) {
@@ -50,12 +54,12 @@ public class GenerateWorld {
             if (roomList.get(i - 1).generatex + roomList.get(i - 1).generatewidth - 1 >= roomList.get(i).generatex) {
                 if (roomList.get(i - 1).generatey + roomList.get(i - 1).generationheight - 1 < roomList.get(i).generatey){
                     for (int j = roomList.get(i - 1).generatey + roomList.get(i - 1).generationheight - 1; j < roomList.get(i).generatey; j++){
-                        tiles[roomList.get(i - 1).generatex + roomList.get(i - 1).generatewidth - 1][j] = Tileset.FLOOR;
+                        tiles[roomList.get(i).generatex][j] = Tileset.FLOOR;
                     }
                 }
                 else if (roomList.get(i).generatey + roomList.get(i).generationheight - 1 < roomList.get(i - 1).generatey){
                     for (int j = roomList.get(i).generatey + roomList.get(i).generationheight - 1; j < roomList.get(i - 1).generatey; j++){
-                        tiles[roomList.get(i - 1).generatex][j] = Tileset.FLOOR;
+                        tiles[roomList.get(i).generatex][j] = Tileset.FLOOR;
                     }
                 }
             }
@@ -67,11 +71,13 @@ public class GenerateWorld {
                         tiles[j][roomList.get(i).generatey] = Tileset.FLOOR;
                     }
                 }
+
                 else if (roomList.get(i).generatey + roomList.get(i).generationheight - 1 >= roomList.get(i - 1).generatey){
                     for (int j = roomList.get(i - 1).generatex + roomList.get(i - 1).generatewidth - 1; j < roomList.get(i).generatey; j++){
-                        tiles[j][roomList.get(i).generatey] = Tileset.FLOOR;
+                        tiles[j][roomList.get(i - 1).generatey] = Tileset.FLOOR;
                     }
                 }
+
                 else {
                     if (roomList.get(i - 1).generatey + roomList.get(i - 1).generationheight - 1 < roomList.get(i).generatey){
                         int max = roomList.get(i).generatex - 1;
@@ -93,10 +99,10 @@ public class GenerateWorld {
                         int min = roomList.get(i - 1).generatex + roomList.get(i - 1).generatewidth;
                         int column = RANDOM.nextInt(max - min - 1) + min + 1;
                         for (int j = min; j <= column; j++){
-                            tiles[j][roomList.get(i - 1).generatex] = Tileset.FLOOR;
+                            tiles[j][roomList.get(i - 1).generatey] = Tileset.FLOOR;
                         }
                         for (int j = max; j >= column; j--){
-                            tiles[j][roomList.get(i).generatex] = Tileset.FLOOR;
+                            tiles[j][roomList.get(i).generatey] = Tileset.FLOOR;
                         }
                         for (int j = roomList.get(i).generatey + roomList.get(i).generationheight; j <= roomList.get(i - 1).generatey; j++){
                             tiles[column][j] = Tileset.FLOOR;
@@ -127,8 +133,8 @@ public class GenerateWorld {
         while(cnt < Max_num){
             int generatewidth = RANDOM.nextInt(17) + 3;
             int generationheight = RANDOM.nextInt(17) + 3;
-            int generatex = RANDOM.nextInt((int) Math.round(WIDTH * 0.05), (int) Math.round((WIDTH - generatewidth) * 0.95));
-            int generatey = RANDOM.nextInt((int) Math.round(HEIGHT * 0.05), (int) Math.round((HEIGHT - generationheight) * 0.95));
+            int generatex = RANDOM.nextInt((int) Math.round(WIDTH * 0.04), (int) Math.round((WIDTH - generatewidth) * 0.96));
+            int generatey = RANDOM.nextInt((int) Math.round(HEIGHT * 0.04), (int) Math.round((HEIGHT - generationheight) * 0.96));
 
             if (judge(tiles, generatex, generatey, generatewidth, generationheight)){
                 System.out.println(cnt);
@@ -188,8 +194,10 @@ public class GenerateWorld {
             }
         }
     }
-    
+/*
     public static void main(String[] args) {
         new GenerateWorld(10);
     }
+*/
+
 }
