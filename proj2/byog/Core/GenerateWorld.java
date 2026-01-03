@@ -23,8 +23,6 @@ public class GenerateWorld {
         RANDOM = new Random(x);
         roomList = new ArrayList<>();
         Max_num = (int) Math.round(0.4 * WIDTH * HEIGHT);
-        TERenderer ter = new TERenderer();
-        ter.initialize(WIDTH, HEIGHT);
     }
 
     public TETile[][] generateTiles() {
