@@ -25,6 +25,74 @@ public class Game {
 
     public void playWithKeyboard() {
 
+        playing();
+        /*
+        GenerateWorld worldGenerator = new GenerateWorld(0);
+
+        this.UNLOCKDOORX = worldGenerator.UNLOCKDOORX;
+        this.UNLOCKDOORY = worldGenerator.UNLOCKDOORY;
+
+        TERenderer ter = new TERenderer();
+        ter.initialize(WIDTH, TOTAL_WINDOW_HEIGHT);
+        RANDOM = new Random(0);
+        drawMainMenu();
+        boolean keyPressed = false;
+        int key = captureMovementInput();
+
+        while(( key == 5 || key == 6 || key == -1) && !keyPressed) {
+
+            if (key == 5){
+                //TETile[][] tiless = worldGenerator.generateTiles();
+                this.tiles = worldGenerator.generateTiles();
+                this.roomList = worldGenerator.roomList;
+                this.UNLOCKDOORY = worldGenerator.UNLOCKDOORY;
+                this.UNLOCKDOORX = worldGenerator.UNLOCKDOORX;
+                keyPressed = true;
+                SetStart(tiles);
+                ter.renderFrame(tiles);
+                int move = captureMovementInput();
+                while (move != 0){
+                    int tag = RenderThePicture(move, tiles);
+                    drawFame (tag, tiles);
+                    move = captureMovementInput();
+                }
+            }
+
+            else if (key == 6){
+                GameState gamestate = loadGame();
+                if(gamestate == null){
+                    StdDraw.clear(StdDraw.BLACK);
+                    Font font0 = new Font("Monaco", Font.BOLD, 80);
+                    StdDraw.setFont(font0);
+                    StdDraw.setPenColor(StdDraw.WHITE);
+                    StdDraw.text(WIDTH * 0.5, HEIGHT * 0.8 , "No files found");
+                    StdDraw.show();
+                    StdDraw.pause(2000);
+                    drawMainMenu();
+                }
+
+                else {
+                    rebuild(gamestate);
+                    keyPressed = false;
+                    ter.renderFrame(this.tiles);
+                    int move = captureMovementInput();
+                    while (move != 0){
+                        int tag = RenderThePicture(move, this.tiles);
+                        drawFame (tag, this.tiles);
+                        move = captureMovementInput();
+                    }
+                }
+            }
+
+            else {
+                System.exit(0);
+            }
+        }
+        */
+    }
+
+    public void playing(){
+
         GenerateWorld worldGenerator = new GenerateWorld(0);
         this.UNLOCKDOORX = worldGenerator.UNLOCKDOORX;
         this.UNLOCKDOORY = worldGenerator.UNLOCKDOORY;
@@ -480,10 +548,53 @@ public class Game {
     }
 
     public TETile[][] playWithInputString(String s) {
-        long seed = parseSeedFromInput(s);
-        System.out.println("seed: " + seed);
+
+        InputParser.ParseResult parseResult = InputParser.parse(s);
+        long seed = parseResult.seed;
+        String commands = parseResult.commands;
         GenerateWorld worldGenerator = new GenerateWorld(seed);
+
         return worldGenerator.generateTiles();
+    }
+
+    public class InputParser {
+        public static class ParseResult {
+            public final long seed;       // 解析出的随机数种子（默认0）
+            public final String commands; // 解析出的命令序列（如 ssdsddaddaad）
+
+            public ParseResult(long seed, String commands) {
+                this.seed = seed;
+                this.commands = commands;
+            }
+        }
+
+        public static ParseResult parse(String input) {
+            if (input == null || input.isEmpty()) {
+                return new ParseResult(0, "");
+            }
+
+            String lowerInput = input.toLowerCase();
+            long seed = 0;
+            String commands = "";
+
+            int nIndex = lowerInput.indexOf('n');
+            int firstSIndex = lowerInput.indexOf('s');
+
+            if (nIndex != -1 && firstSIndex != -1 && firstSIndex > nIndex + 1) {
+                String seedStr = input.substring(nIndex + 1, firstSIndex);
+                try {
+                    seed = Long.parseLong(seedStr);
+                } catch (NumberFormatException e) {
+                    seed = 0;
+                }
+                commands = input.substring(firstSIndex + 1);
+            } else if (nIndex != -1) {
+                commands = input.substring(nIndex + 1);
+            } else {
+                commands = input;
+            }
+            return new ParseResult(seed, commands);
+        }
     }
 
     private long parseSeedFromInput(String input) {
