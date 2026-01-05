@@ -39,18 +39,18 @@ public class Game {
         while(( key == 5 || key == 6 || key == -1) && !keyPressed) {
 
             if (key == 5){
-                TETile[][] tiless = worldGenerator.generateTiles();
+                //TETile[][] tiless = worldGenerator.generateTiles();
+                this.tiles = worldGenerator.generateTiles();
                 this.roomList = worldGenerator.roomList;
                 this.UNLOCKDOORY = worldGenerator.UNLOCKDOORY;
                 this.UNLOCKDOORX = worldGenerator.UNLOCKDOORX;
                 keyPressed = true;
-                SetStart(tiless);
-                ter.renderFrame(tiless);
+                SetStart(tiles);
+                ter.renderFrame(tiles);
                 int move = captureMovementInput();
                 while (move != 0){
-                    mouseTip();
-                    int tag = RenderThePicture(move, tiless);
-                    drawFame (tag, tiless);
+                    int tag = RenderThePicture(move, tiles);
+                    drawFame (tag, tiles);
                     move = captureMovementInput();
                 }
             }
@@ -58,7 +58,6 @@ public class Game {
             else if (key == 6){
                 GameState gamestate = loadGame();
                 if(gamestate == null){
-                    mouseTip();
                     StdDraw.clear(StdDraw.BLACK);
                     Font font0 = new Font("Monaco", Font.BOLD, 80);
                     StdDraw.setFont(font0);
@@ -75,7 +74,6 @@ public class Game {
                     ter.renderFrame(this.tiles);
                     int move = captureMovementInput();
                     while (move != 0){
-                        mouseTip();
                         int tag = RenderThePicture(move, this.tiles);
                         drawFame (tag, this.tiles);
                         move = captureMovementInput();
@@ -278,33 +276,42 @@ public class Game {
         }
     }
 
-    private void mouseTip(){
+    private void mouseTip() {
         double mouseX = StdDraw.mouseX();
         double mouseY = StdDraw.mouseY();
         int numx = (int) mouseX;
         int numy = (int) mouseY;
-        description(numx, numy);
+        description(numx, numy );
     }
 
-    private void description(int numx, int numy){
+    private void description(int numx, int numy ){
         String str = "";
-        if(tiles[numx][numy] == Tileset.FLOOR){
-            str = "It is the Floor, keep moving!";
-        }
-        else if(tiles[numx][numy] == Tileset.PLAYER){
-            str = "It is the Player, You are right there!";
-        }
-        else if (tiles[numx][numy] == Tileset.WALL){
-            str = "It is the Wall, You cannot walk through it!";
-        }
-        else if (tiles[numx][numy] == Tileset.NOTHING) {
-            str = "OUT OF THIS MAP";
-        }
+        if (numx >= 0 && numx < WIDTH && numy >= 0 && numy < HEIGHT ) {
+            if(tiles[numx][numy] == Tileset.FLOOR){
+                str = "It is the Floor, keep moving!";
+            }
+            else if(tiles[numx][numy] == Tileset.PLAYER){
+                str = "It is the Player, You are right there!";
+            }
+            else if (tiles[numx][numy] == Tileset.WALL){
+                str = "It is the Wall, You cannot walk through it!";
+            }
+            else if (tiles[numx][numy] == Tileset.NOTHING) {
+                str = "OUT OF THIS MAP";
+            }
+            else {
+                str = "fuck";
+            }
 
-        Font font1 = new Font("Monaco", Font.BOLD, 20);
-        StdDraw.setFont(font1);
-        StdDraw.text(WIDTH - 10, HEIGHT + TEXT_BOX_HEIGHT/2.0 - 4, str);
-        StdDraw.show();
+            clearRightTipArea();
+
+            Font font1 = new Font("Monaco", Font.BOLD, 20);
+            StdDraw.setFont(font1);
+            StdDraw.setPenColor(StdDraw.RED);
+
+            StdDraw.text(WIDTH - 10, HEIGHT + TEXT_BOX_HEIGHT/2.0 - 4, str);
+            StdDraw.show();
+        }
     }
 
     private void drawMainMenu(){
@@ -354,7 +361,7 @@ public class Game {
         double textY = HEIGHT + TEXT_BOX_HEIGHT/2.0 - 4;
         StdDraw.text(textX, textY, tip);
         StdDraw.show();
-        StdDraw.rectangle(WIDTH/2.0, HEIGHT + TEXT_BOX_HEIGHT/2.0 - 4, WIDTH/2.0 - 2, TEXT_BOX_HEIGHT/2.0 - 4);
+        //StdDraw.rectangle(WIDTH/2.0, HEIGHT + TEXT_BOX_HEIGHT/2.0 - 4, WIDTH/2.0 - 2, TEXT_BOX_HEIGHT/2.0 - 4);
         StdDraw.pause(10);
     }
 
@@ -431,8 +438,9 @@ public class Game {
         return 2;
     }
 
-    public int captureMovementInput() {
+    public int captureMovementInput( ) {
         while (true) {
+            mouseTip();
             if (StdDraw.hasNextKeyTyped()) {
                 char key = Character.toLowerCase(StdDraw.nextKeyTyped());
                 switch (key) {
@@ -456,8 +464,19 @@ public class Game {
                         break;
                 }
             }
-            StdDraw.pause(10);
         }
+    }
+
+    private void clearRightTipArea() {
+        Color originalColor = StdDraw.getPenColor();
+
+        StdDraw.setPenColor(Color.BLACK);
+        double centerX = 49;
+        double centerY = 70;
+        double halfWidth = 16;
+        double halfHeight = 5;
+        StdDraw.filledRectangle(centerX, centerY, halfWidth, halfHeight);
+        StdDraw.setPenColor(originalColor);
     }
 
     public TETile[][] playWithInputString(String s) {
