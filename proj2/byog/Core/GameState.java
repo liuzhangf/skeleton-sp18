@@ -2,17 +2,23 @@ package byog.Core;
 
 import java.io.Serializable;
 import byog.TileEngine.TETile;
+
+import java.util.ArrayList;
 import java.util.Random;
 
 public class GameState implements Serializable {
-    public TETile[][] tiles;
-    public int posx;
-    public int posy;
-    public Random random;
-    public GameState(TETile[][] tiles, int posx, int posy, Random random) {
-        this.tiles = tiles;
-        this.posx = posx;
-        this.posy = posy;
-        this.random = random;
+    public int unlockdoorx;
+    public int unlockdoory;
+    public int PLAYERX;
+    public int PLAYERY;
+    public ArrayList<GenerateWorld.Room> roomList;
+    public Random rand ;
+    public GameState(int unlockdoorx, int unlockdoory, int posx, int posy,ArrayList<GenerateWorld.Room> roomList, Random rand) {
+        this.unlockdoorx = unlockdoorx;
+        this.unlockdoory = unlockdoory;
+        this.PLAYERX = posx;
+        this.PLAYERY = posy;
+        this.roomList = roomList;
+        this.rand = rand;
     }
 }

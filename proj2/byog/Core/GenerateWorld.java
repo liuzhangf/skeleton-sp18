@@ -2,6 +2,8 @@ package byog.Core;
 import byog.TileEngine.TERenderer;
 import byog.TileEngine.TETile;
 import byog.TileEngine.Tileset;
+
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Collections;
@@ -17,7 +19,10 @@ public class GenerateWorld {
     private static final int HEIGHT = 65;
     private final Random RANDOM;
     private int Max_num;
-    private ArrayList<Room> roomList;
+    public ArrayList<Room> roomList;
+    public int UNLOCKDOORX;
+    public int UNLOCKDOORY;
+
 
     public GenerateWorld(long  x) {
         RANDOM = new Random(x);
@@ -38,10 +43,8 @@ public class GenerateWorld {
         GeneratePath(world, roomList);
         drawWall(world);
         GenerateTheGolden(world);
-       // GenerateThePlayer(world);
         return world;
     }
-
 
     private void GenerateTheGolden(TETile[][] world) {
         boolean flag = true;
@@ -50,6 +53,8 @@ public class GenerateWorld {
                 for(int y = 0; y < HEIGHT; y++) {
                     if(world[x][y] == Tileset.WALL && flag) {
                         if(randomInt(0,10) <= 1){
+                            UNLOCKDOORX = x;
+                            UNLOCKDOORY = y;
                             world[x][y] = Tileset.UNLOCKED_DOOR;
                             flag = false;
                         }
@@ -58,24 +63,6 @@ public class GenerateWorld {
             }
         }
     }
-
-
-    private void GenerateThePlayer(TETile[][] world) {
-        boolean flag = true;
-        while(flag) {
-            for(int x = 0; x < WIDTH; x++) {
-                for(int y = 0; y < HEIGHT; y++) {
-                    if(world[x][y] == Tileset.FLOOR && flag) {
-                        if(randomInt(0,1000) <= 1){
-                            world[x][y] = Tileset.PLAYER;
-                            flag = false;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
 
     private int randomInt(int min, int max) {
         if (min > max) { // 防止min>max报错
@@ -88,15 +75,6 @@ public class GenerateWorld {
 
     private void GeneratePath(TETile[][] tiles, ArrayList<Room> roomList) {
         for (int i = 1; i < roomList.size(); i++) {
-
-            /*
-            从左到右看,竖条的形状有重叠
-
-            System.out.println();
-            System.out.println(i);
-            System.out.println(roomList.get(i).generatex);
-            System.out.println(roomList.get(i).generatewidth);
-            */
             if (roomList.get(i - 1).generatex + roomList.get(i - 1).generatewidth - 1 >= roomList.get(i).generatex) {
 
                 if (roomList.get(i - 1).generatey + roomList.get(i - 1).generationheight - 1 < roomList.get(i).generatey){
@@ -165,7 +143,7 @@ public class GenerateWorld {
         }
     }
 
-    public static class Room implements Comparable<Room> {
+    public static class Room implements Comparable<Room>, Serializable {
         int generatewidth, generationheight, generatex, generatey;
 
         public Room(int generatewidth, int generationheight, int generatex, int generatey) {

@@ -1,13 +1,13 @@
 package byog.Core;
-import java.awt.Font;
+import java.awt.*;
+
 import byog.TileEngine.TERenderer;
 import byog.TileEngine.TETile;
 import byog.TileEngine.Tileset;
 import edu.princeton.cs.introcs.StdDraw;
-import java.util.Random;
-
-import java.io.Serializable;
-import byog.TileEngine.TETile;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 public class Game {
@@ -18,61 +18,246 @@ public class Game {
     public static final int TOTAL_WINDOW_HEIGHT = HEIGHT + TEXT_BOX_HEIGHT;
     private int posx, posy;
     private Random RANDOM;
-    TETile[][] tiles;
+    TETile[][] tiles = new TETile[WIDTH][HEIGHT];
+    public int UNLOCKDOORX;
+    public int UNLOCKDOORY;
+    private ArrayList<GenerateWorld.Room> roomList;
 
     public void playWithKeyboard() {
+
         GenerateWorld worldGenerator = new GenerateWorld(0);
+        this.UNLOCKDOORX = worldGenerator.UNLOCKDOORX;
+        this.UNLOCKDOORY = worldGenerator.UNLOCKDOORY;
+
         TERenderer ter = new TERenderer();
         ter.initialize(WIDTH, TOTAL_WINDOW_HEIGHT);
         RANDOM = new Random(0);
         drawMainMenu();
         boolean keyPressed = false;
-        while(( captureMovementInput() == 5 || captureMovementInput() == 6 || captureMovementInput() == -1) && !keyPressed) {
+        int key = captureMovementInput();
 
-            if (captureMovementInput() == 5){
+        while(( key == 5 || key == 6 || key == -1) && !keyPressed) {
+
+            if (key == 5){
                 TETile[][] tiless = worldGenerator.generateTiles();
+                this.roomList = worldGenerator.roomList;
+                this.UNLOCKDOORY = worldGenerator.UNLOCKDOORY;
+                this.UNLOCKDOORX = worldGenerator.UNLOCKDOORX;
                 keyPressed = true;
                 SetStart(tiless);
                 ter.renderFrame(tiless);
                 int move = captureMovementInput();
                 while (move != 0){
+                    mouseTip();
                     int tag = RenderThePicture(move, tiless);
                     drawFame (tag, tiless);
                     move = captureMovementInput();
                 }
             }
 
-            else if (captureMovementInput() == 6){
-                if(this.tiles == null){
+            else if (key == 6){
+                GameState gamestate = loadGame();
+                if(gamestate == null){
+                    mouseTip();
                     StdDraw.clear(StdDraw.BLACK);
                     Font font0 = new Font("Monaco", Font.BOLD, 80);
                     StdDraw.setFont(font0);
                     StdDraw.setPenColor(StdDraw.WHITE);
-                    StdDraw.text(WIDTH * 0.5, HEIGHT * 0.8 , "No tiles found");
+                    StdDraw.text(WIDTH * 0.5, HEIGHT * 0.8 , "No files found");
                     StdDraw.show();
                     StdDraw.pause(2000);
                     drawMainMenu();
                 }
 
                 else {
+                    rebuild(gamestate);
                     keyPressed = false;
                     ter.renderFrame(this.tiles);
                     int move = captureMovementInput();
                     while (move != 0){
+                        mouseTip();
                         int tag = RenderThePicture(move, this.tiles);
                         drawFame (tag, this.tiles);
                         move = captureMovementInput();
                     }
                 }
             }
+
             else {
                 System.exit(0);
             }
         }
     }
 
-    private void saveGame () {
+    private void drawWall(TETile[][] tiles) {
+        for (int i = 0; i < WIDTH; i += 1) {
+            for (int j = 0; j < HEIGHT; j += 1) {
+                if (tiles[i][j] == Tileset.NOTHING) {
+                    boolean hasFloor = false;
+                    if (j + 1 < HEIGHT && tiles[i][j + 1] == Tileset.FLOOR) {
+                        hasFloor = true;
+                    }
+                    else if (j - 1 >= 0 && tiles[i][j - 1] == Tileset.FLOOR) {
+                        hasFloor = true;
+                    }
+                    else if (i + 1 < WIDTH && tiles[i + 1][j] == Tileset.FLOOR) {
+                        hasFloor = true;
+                    }
+                    else if (i - 1 >= 0 && tiles[i - 1][j] == Tileset.FLOOR) {
+                        hasFloor = true;
+                    }
+                    if (hasFloor) {
+                        tiles[i][j] = Tileset.WALL;
+                    }
+                }
+            }
+        }
+    }
 
+    private void rebuild(GameState gamestate){
+
+        for(int i = 0; i < WIDTH; i += 1){
+            for(int j = 0; j < HEIGHT; j += 1){
+                this.tiles[i][j] = Tileset.NOTHING;
+            }
+        }
+
+        for(int i = 0; i < gamestate.roomList.size(); i++){
+            int posx = gamestate.roomList.get(i).generatex;
+            int posy = gamestate.roomList.get(i).generatey;
+            int width = gamestate.roomList.get(i).generatewidth;
+            int height = gamestate.roomList.get(i).generationheight;
+            for (int x = 0; x < width; x++){
+                for (int y = 0; y < height; y++){
+                    this.tiles[posx + x][posy + y] = Tileset.FLOOR;
+                }
+            }
+        }
+
+        ArrayList<GenerateWorld.Room> rooms = gamestate.roomList;
+        Collections.sort(rooms);
+        GeneratePath(tiles, rooms);
+
+        drawWall(tiles);
+        tiles[gamestate.PLAYERX][gamestate.PLAYERY] = Tileset.PLAYER;
+        tiles[gamestate.unlockdoorx][gamestate.unlockdoory] = Tileset.UNLOCKED_DOOR;
+        this.posx = gamestate.PLAYERX;
+        this.posy = gamestate.PLAYERY;
+        this.RANDOM = gamestate.rand;
+    }
+
+    private void saveGame (TETile[][] world) {
+        this.tiles = world;
+        File saveFile = new File("../game_save.txt");
+        try (
+            FileOutputStream fos = new FileOutputStream(saveFile);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+        ){
+            GameState state = new GameState(
+                    this.UNLOCKDOORX,
+                    this.UNLOCKDOORY,
+                    this.posx,
+                    this.posy,
+                    this.roomList,
+                    this.RANDOM
+            );
+            oos.writeObject(state);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private GameState loadGame () {
+
+        File saveFile = new File("../game_save.txt");
+
+        if(!saveFile.exists()) {
+            System.out.println("Save file not found");
+            return null;
+        }
+
+        else {
+            try(
+                FileInputStream  fis = new FileInputStream(saveFile);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+            ){
+                GameState state = (GameState) ois.readObject();
+                return state;
+            }catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+    }
+
+    private void GeneratePath(TETile[][] tiles, ArrayList<GenerateWorld.Room> roomList) {
+        for (int i = 1; i < roomList.size(); i++) {
+            if (roomList.get(i - 1).generatex + roomList.get(i - 1).generatewidth - 1 >= roomList.get(i).generatex) {
+
+                if (roomList.get(i - 1).generatey + roomList.get(i - 1).generationheight - 1 < roomList.get(i).generatey){
+
+                    for (int j = roomList.get(i - 1).generatey + roomList.get(i - 1).generationheight - 1; j < roomList.get(i).generatey; j++){
+                        tiles[roomList.get(i).generatex][j] = Tileset.FLOOR;
+                    }
+                }
+                else if (roomList.get(i).generatey + roomList.get(i).generationheight - 1 < roomList.get(i - 1).generatey){
+
+                    for (int j = roomList.get(i).generatey + roomList.get(i).generationheight - 1; j < roomList.get(i - 1).generatey; j++){
+                        tiles[roomList.get(i).generatex][j] = Tileset.FLOOR;
+                    }
+                }
+            }
+
+            else {
+                if (roomList.get(i - 1).generatey >= roomList.get(i).generatey && roomList.get(i - 1).generatey <= roomList.get(i).generatey + roomList.get(i).generationheight - 1){
+                    System.out.println("c");
+                    for (int j = roomList.get(i - 1).generatex + roomList.get(i - 1).generatewidth - 1; j < roomList.get(i).generatex; j++){
+                        tiles[j][roomList.get(i - 1).generatey] = Tileset.FLOOR;
+                    }
+                }
+
+                else if (roomList.get(i).generatey >= roomList.get(i - 1).generatey && roomList.get(i).generatey <= roomList.get(i - 1).generatey + roomList.get(i - 1).generationheight - 1 ){
+                    for (int j = roomList.get(i - 1).generatex + roomList.get(i - 1).generatewidth - 1; j < roomList.get(i).generatey; j++){
+                        tiles[j][roomList.get(i - 1).generatey] = Tileset.FLOOR;
+                    }
+                }
+
+                else {
+                    if (roomList.get(i - 1).generatey + roomList.get(i - 1).generationheight - 1 < roomList.get(i).generatey){
+
+                        int max = Math.max(roomList.get(i - 1).generatex + roomList.get(i - 1).generatewidth, roomList.get(i).generatex - 1);
+                        int min = Math.min(roomList.get(i - 1).generatex + roomList.get(i - 1).generatewidth, roomList.get(i).generatex - 1);
+                        int column = RANDOM.nextInt(max - min + 1 ) + min;
+
+                        for (int j = min; j <= column; j++){
+                            tiles[j][roomList.get(i - 1).generatey + roomList.get(i - 1).generationheight - 1] = Tileset.FLOOR;
+                        }
+                        for (int j = max; j >= column; j--){
+                            tiles[j][roomList.get(i).generatey] = Tileset.FLOOR;
+                        }
+                        for (int j = roomList.get(i - 1).generatey + roomList.get(i - 1).generationheight; j <= roomList.get(i).generatey; j++){
+                            tiles[column][j] = Tileset.FLOOR;
+                        }
+                    }
+
+                    else {
+                        int max = Math.max(roomList.get(i - 1).generatex + roomList.get(i - 1).generatewidth, roomList.get(i).generatex - 1);
+                        int min = Math.min(roomList.get(i - 1).generatex + roomList.get(i - 1).generatewidth, roomList.get(i).generatex - 1);
+                        int column = RANDOM.nextInt(max - min + 1 ) + min;
+
+                        for (int j = min; j <= column; j++){
+                            tiles[j][roomList.get(i - 1).generatey] = Tileset.FLOOR;
+                        }
+                        for (int j = max; j >= column; j--){
+                            tiles[j][roomList.get(i).generatey + roomList.get(i).generationheight] = Tileset.FLOOR;
+                        }
+                        for (int j = roomList.get(i).generatey + roomList.get(i).generationheight; j <= roomList.get(i - 1).generatey; j++){
+                            tiles[column][j] = Tileset.FLOOR;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public void SetStart(TETile[][] world) {
@@ -91,6 +276,35 @@ public class Game {
                 }
             }
         }
+    }
+
+    private void mouseTip(){
+        double mouseX = StdDraw.mouseX();
+        double mouseY = StdDraw.mouseY();
+        int numx = (int) mouseX;
+        int numy = (int) mouseY;
+        description(numx, numy);
+    }
+
+    private void description(int numx, int numy){
+        String str = "";
+        if(tiles[numx][numy] == Tileset.FLOOR){
+            str = "It is the Floor, keep moving!";
+        }
+        else if(tiles[numx][numy] == Tileset.PLAYER){
+            str = "It is the Player, You are right there!";
+        }
+        else if (tiles[numx][numy] == Tileset.WALL){
+            str = "It is the Wall, You cannot walk through it!";
+        }
+        else if (tiles[numx][numy] == Tileset.NOTHING) {
+            str = "OUT OF THIS MAP";
+        }
+
+        Font font1 = new Font("Monaco", Font.BOLD, 20);
+        StdDraw.setFont(font1);
+        StdDraw.text(WIDTH - 10, HEIGHT + TEXT_BOX_HEIGHT/2.0 - 4, str);
+        StdDraw.show();
     }
 
     private void drawMainMenu(){
@@ -118,6 +332,7 @@ public class Game {
     }
 
     private void drawFame(int moveResult, TETile[][] tiles){
+
         ter.renderFrame(tiles);
         StdDraw.setPenColor(StdDraw.YELLOW);
         StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
@@ -141,14 +356,14 @@ public class Game {
         StdDraw.show();
         StdDraw.rectangle(WIDTH/2.0, HEIGHT + TEXT_BOX_HEIGHT/2.0 - 4, WIDTH/2.0 - 2, TEXT_BOX_HEIGHT/2.0 - 4);
         StdDraw.pause(10);
-
     }
 
     private int RenderThePicture(int flag, TETile[][] tiles){
 
-        if(flag == -1){
-            this.tiles = tiles;
-            System.exit(0);
+        if(flag == 7){
+            if (captureMovementInput() == -1){
+                saveGame(tiles);System.exit(0);
+            }
         }
         else if (flag == 1){
             if(tiles[posx][posy + 1] == Tileset.WALL){
@@ -183,10 +398,10 @@ public class Game {
         }
 
         else if (flag == 3){
+
             if(tiles[posx - 1][posy] == Tileset.WALL){
                 return 0;
             }
-
             else if (tiles[posx - 1][posy] == Tileset.UNLOCKED_DOOR){
                 return 1;
             }
@@ -198,7 +413,7 @@ public class Game {
             }
         }
 
-        else {
+        else if(flag == 4) {
             if(tiles[posx + 1][posy] == Tileset.WALL){
                 return 0;
             }
@@ -235,6 +450,8 @@ public class Game {
                         return 5;
                     case 'l':
                         return 6;
+                    case ':':
+                        return 7;
                     default:
                         break;
                 }
