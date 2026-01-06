@@ -660,7 +660,7 @@ public class Game {
         }
     }
 
-        private long parseSeedFromInput(String input) {
+    private long parseSeedFromInput(String input) {
         if (input == null || input.isEmpty()) {
             return 0;
         }

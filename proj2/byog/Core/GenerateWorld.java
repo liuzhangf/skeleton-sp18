@@ -30,6 +30,7 @@ public class GenerateWorld {
         Max_num = (int) Math.round(0.4 * WIDTH * HEIGHT);
     }
 
+
     public TETile[][] generateTiles() {
 
         TETile[][] world = new TETile[WIDTH][HEIGHT];
@@ -93,7 +94,6 @@ public class GenerateWorld {
 
             else {
                 if (roomList.get(i - 1).generatey >= roomList.get(i).generatey && roomList.get(i - 1).generatey <= roomList.get(i).generatey + roomList.get(i).generationheight - 1){
-                    System.out.println("c");
                     for (int j = roomList.get(i - 1).generatex + roomList.get(i - 1).generatewidth - 1; j < roomList.get(i).generatex; j++){
                         tiles[j][roomList.get(i - 1).generatey] = Tileset.FLOOR;
                     }
