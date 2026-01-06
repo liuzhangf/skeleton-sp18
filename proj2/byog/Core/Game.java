@@ -91,6 +91,65 @@ public class Game {
         */
     }
 
+    private TETile[][] playingString(String s, long seed) {
+        GenerateWorld worldGenerator = new GenerateWorld(seed);
+        this.UNLOCKDOORX = worldGenerator.UNLOCKDOORX;
+        this.UNLOCKDOORY = worldGenerator.UNLOCKDOORY;
+
+        TERenderer ter = new TERenderer();
+       // ter.initialize(WIDTH, TOTAL_WINDOW_HEIGHT);
+        RANDOM = new Random(seed);
+
+        if (s.charAt(0) == 'n'){
+            this.tiles = worldGenerator.generateTiles();
+            this.roomList = worldGenerator.roomList;
+            this.UNLOCKDOORY = worldGenerator.UNLOCKDOORY;
+            this.UNLOCKDOORX = worldGenerator.UNLOCKDOORX;
+            SetStart(tiles);
+            for(int i = 1; i < s.length(); i++) {
+                if (s.charAt(i) == 's'){
+                    int tag = RenderThePicture(2,tiles);
+                }
+                else if (s.charAt(i) == 'w'){
+                    int tag = RenderThePicture(1,tiles);
+                }
+                else if (s.charAt(i) == 'a'){
+                    int tag = RenderThePicture(3,tiles);
+                }
+                else if (s.charAt(i) == 'd'){
+                    int tag = RenderThePicture(4,tiles);
+                }
+                else if (s.charAt(i) == ':' && s.charAt(i+1) == 'q'){
+                    saveGame(tiles);
+                    break;
+                }
+            }
+        }
+
+        else if (s.charAt(0) == 'l'){
+            GameState gamestate = loadGame();
+            rebuild(gamestate);
+            for(int i = 1; i < s.length(); i++) {
+                if (s.charAt(i) == 's'){
+                    int tag = RenderThePicture(2,tiles);
+                }
+                else if (s.charAt(i) == 'w'){
+                    int tag = RenderThePicture(1,tiles);
+                }
+                else if (s.charAt(i) == 'a'){
+                    int tag = RenderThePicture(3,tiles);
+                }
+                else if (s.charAt(i) == 'd'){
+                    int tag = RenderThePicture(4,tiles);
+                }
+                else if (s.charAt(i) == ':' && s.charAt(i+1) == 'q'){
+                    saveGame(tiles);
+                }
+            }
+        }
+        return tiles;
+    }
+
     public void playing(){
 
         GenerateWorld worldGenerator = new GenerateWorld(0);
@@ -276,7 +335,6 @@ public class Game {
 
             else {
                 if (roomList.get(i - 1).generatey >= roomList.get(i).generatey && roomList.get(i - 1).generatey <= roomList.get(i).generatey + roomList.get(i).generationheight - 1){
-                    System.out.println("c");
                     for (int j = roomList.get(i - 1).generatex + roomList.get(i - 1).generatewidth - 1; j < roomList.get(i).generatex; j++){
                         tiles[j][roomList.get(i - 1).generatey] = Tileset.FLOOR;
                     }
@@ -437,7 +495,7 @@ public class Game {
 
         if(flag == 7){
             if (captureMovementInput() == -1){
-                saveGame(tiles);System.exit(0);
+                saveGame(tiles);//System.exit(0);
             }
         }
         else if (flag == 1){
@@ -549,55 +607,60 @@ public class Game {
 
     public TETile[][] playWithInputString(String s) {
 
-        InputParser.ParseResult parseResult = InputParser.parse(s);
+        SeedCommandExtractor.Result parseResult = SeedCommandExtractor.extract(s);
         long seed = parseResult.seed;
-        String commands = parseResult.commands;
-        GenerateWorld worldGenerator = new GenerateWorld(seed);
-
-        return worldGenerator.generateTiles();
+        String commands = parseResult.command;
+        //GenerateWorld worldGenerator = new GenerateWorld(seed);
+        return playingString(commands, seed);
+        //return worldGenerator.generateTiles();
     }
 
-    public class InputParser {
-        public static class ParseResult {
-            public final long seed;       // 解析出的随机数种子（默认0）
-            public final String commands; // 解析出的命令序列（如 ssdsddaddaad）
+    public class SeedCommandExtractor {
+        public static class Result {
+            public final long seed;
+            public final String command;
 
-            public ParseResult(long seed, String commands) {
+            public Result(long seed, String command) {
                 this.seed = seed;
-                this.commands = commands;
+                this.command = command;
             }
         }
 
-        public static ParseResult parse(String input) {
+        public static Result extract(String input) {
             if (input == null || input.isEmpty()) {
-                return new ParseResult(0, "");
+                return new Result(0, "");
             }
 
             String lowerInput = input.toLowerCase();
             long seed = 0;
-            String commands = "";
+            String command = "";
 
             int nIndex = lowerInput.indexOf('n');
-            int firstSIndex = lowerInput.indexOf('s');
+            if (nIndex == -1) {
+                return new Result(0, input);
+            }
 
-            if (nIndex != -1 && firstSIndex != -1 && firstSIndex > nIndex + 1) {
-                String seedStr = input.substring(nIndex + 1, firstSIndex);
+            int digitStart = nIndex + 1;
+            int digitEnd = digitStart;
+            while (digitEnd < input.length() && Character.isDigit(input.charAt(digitEnd))) {
+                digitEnd++;
+            }
+
+            if (digitEnd > digitStart) {
+                String seedStr = input.substring(digitStart, digitEnd);
                 try {
                     seed = Long.parseLong(seedStr);
                 } catch (NumberFormatException e) {
                     seed = 0;
                 }
-                commands = input.substring(firstSIndex + 1);
-            } else if (nIndex != -1) {
-                commands = input.substring(nIndex + 1);
-            } else {
-                commands = input;
             }
-            return new ParseResult(seed, commands);
+
+            command = "n" + (digitEnd < input.length() ? input.substring(digitEnd) : "");
+            return new Result(seed, command);
         }
     }
 
-    private long parseSeedFromInput(String input) {
+        private long parseSeedFromInput(String input) {
         if (input == null || input.isEmpty()) {
             return 0;
         }
