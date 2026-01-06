@@ -615,7 +615,7 @@ public class Game {
         //return worldGenerator.generateTiles();
     }
 
-    public class SeedCommandExtractor {
+    public static class SeedCommandExtractor {
         public static class Result {
             public final long seed;
             public final String command;
