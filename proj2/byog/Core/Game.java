@@ -6,6 +6,8 @@ import byog.TileEngine.TETile;
 import byog.TileEngine.Tileset;
 import edu.princeton.cs.introcs.StdDraw;
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
@@ -150,6 +152,13 @@ public class Game {
         return tiles;
     }
 
+    private static final Path SAVE_FILE_PATH = Paths.get(
+            System.getProperty("user.home"),
+            "byog_game_save.txt"
+    );
+
+
+
     public void playing(){
 
         GenerateWorld worldGenerator = new GenerateWorld(0);
@@ -166,7 +175,6 @@ public class Game {
         while(( key == 5 || key == 6 || key == -1) && !keyPressed) {
 
             if (key == 5){
-                //TETile[][] tiless = worldGenerator.generateTiles();
                 this.tiles = worldGenerator.generateTiles();
                 this.roomList = worldGenerator.roomList;
                 this.UNLOCKDOORY = worldGenerator.UNLOCKDOORY;
@@ -273,7 +281,7 @@ public class Game {
 
     private void saveGame (TETile[][] world) {
         this.tiles = world;
-        File saveFile = new File("../game_save.txt");
+        File saveFile = SAVE_FILE_PATH.toFile();
         try (
             FileOutputStream fos = new FileOutputStream(saveFile);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -294,7 +302,7 @@ public class Game {
 
     private GameState loadGame () {
 
-        File saveFile = new File("../game_save.txt");
+        File saveFile = SAVE_FILE_PATH.toFile();
 
         if(!saveFile.exists()) {
             System.out.println("Save file not found");
@@ -495,7 +503,7 @@ public class Game {
 
         if(flag == 7){
             if (captureMovementInput() == -1){
-                saveGame(tiles);//System.exit(0);
+                saveGame(tiles);System.exit(0);
             }
         }
         else if (flag == 1){
